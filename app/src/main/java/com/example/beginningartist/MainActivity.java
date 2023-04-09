@@ -6,9 +6,13 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.Toast;
+
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -39,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         drawButton = findViewById(R.id.fabBrush);
         eraseButton = findViewById(R.id.fabErase);
         newButton = findViewById(R.id.fabAdd);
+        saveButton = findViewById(R.id.fabSave);
 
         currPaint = (ImageButton) paintLayout.getChildAt(0); // получение первой кнопки
         currPaint.setImageDrawable(getResources().getDrawable(R.drawable.paint_pressed)); // при выборе данной кнопки она должна изменить вид в соответствии с ресурсом
@@ -47,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         drawButton.setOnClickListener(this);
         eraseButton.setOnClickListener(this);
         newButton.setOnClickListener(this);
+        saveButton.setOnClickListener(this);
 
     }
 
@@ -177,8 +183,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             });
             newDialog.show(); // отображение на экране данного диалога
+        } else if(view.getId()==R.id.fabSave){ // если выбрана кнопка сохранения документа
+                // код для сохранения документа
+                AlertDialog.Builder newDialog = new AlertDialog.Builder(this); // создание диалогового окна типа AlertDialog
+                newDialog.setTitle("Сохранить"); // заголовок диалогового окна
+                newDialog.setMessage("Сохранить рисунок?"); // сообщение диалога
+                newDialog.setPositiveButton("Да", new DialogInterface.OnClickListener(){ // пункт выбора "да"
+                    public void onClick(DialogInterface dialog, int which){
+                        // код сохранения рисунка
+                        drawingView.setDrawingCacheEnabled(true); // сохраним кэш имеющегося рисунка
 
+                        // сохранение изображения в файл
+                        // (метод insertImage() записывает изображение в постоянную память устройства,
+                        // UUID.randomUUID().toString() - генерирует случайную строку для названия имени файла)
+                        String imageSaved = MediaStore.Images.Media.insertImage(
+                                getContentResolver(), drawingView.getDrawingCache(),
+                                UUID.randomUUID().toString()+".png", "drawing");
 
+                        // вывод тоста информации о сохранении рисунка
+                        if(imageSaved != null) { // если изображение сохранено, то вывод тоста об успешности сохранения
+                            Toast savedToast = Toast.makeText(getApplicationContext(),
+                                    "Изображение успешно сохранено в галлерею!", Toast.LENGTH_SHORT);
+                            savedToast.show();
+                        } else { // иначе, вывод тоста об неудачном сохранении
+                            Toast unsavedToast = Toast.makeText(getApplicationContext(),
+                                    "Сохранить изображение не удалось!", Toast.LENGTH_SHORT);
+                            unsavedToast.show();
+                        }
+                        drawingView.destroyDrawingCache(); // удаление кэша рисунка
+                    }
+                });
+                newDialog.setNegativeButton("Отмена", new DialogInterface.OnClickListener(){
+                    public void onClick(DialogInterface dialog, int which){ // пункт выбора "нет"
+                        dialog.cancel(); // выход из диалога
+                    }
+                });
+                newDialog.show(); // отображение на экране данного диалога
 
         }
     }
