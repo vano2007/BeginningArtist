@@ -6,7 +6,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -20,6 +23,27 @@ public class DrawingView extends View {
     private int paintColor = 0xFF660000; // цвет по умолчанию
     private Canvas drawCanvas; // canvas
     private Bitmap canvasBitmap; // canvas bitmap
+    private float brushSize, lastBrushSize; // поля размера кисти (brushSize - размер кисти, lastBrushSize - последний размер кисти)
+
+    // создание дополнительных полей
+    private boolean erase = false; // поле флага действия стирания или рисования (ластик или кисть) false - кисть, true - ластик
+
+    // метод запуска нового документа
+    public void startNew() {
+        drawCanvas.drawColor(0, PorterDuff.Mode.CLEAR); // очистка холста
+        invalidate(); // обновление окна отображения рисунка
+    }
+
+    // добавим сеттер поля флага действия стирания или рисования
+    public void setErase(boolean erase) {
+        this.erase = erase;
+        // параметр рисования (ластик или кисть)
+        if(erase) { // если выбор ластика
+            drawPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR)); // то назначается кисть очищения экрана
+        } else { // иначе
+            drawPaint.setXfermode(null); // обычная кисть
+        }
+    }
 
     // Конструктор родительского класса
     public DrawingView(Context context, @Nullable AttributeSet attrs) {
@@ -89,7 +113,29 @@ public class DrawingView extends View {
         drawPaint.setStrokeJoin(Paint.Join.ROUND);
         drawPaint.setStrokeCap(Paint.Cap.ROUND);
 
+        // создание экземпляра размера кисти
+        brushSize = getResources().getInteger(R.integer.medium_size); // установление размера кисти по умолчанию
+        lastBrushSize = brushSize; // присваивание последней кисти значения кисти по умолчанию
+
+        drawPaint.setStrokeWidth(brushSize); // задание размера кисти
+
         canvasPaint = new Paint(Paint.DITHER_FLAG); // создание объекта класса Canvas
+    }
+
+    // метод изменения размера кисти
+    public void setBrushSize(float newSize) {
+        // изменение размера кисти
+        float pixelAmount = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                newSize, getResources().getDisplayMetrics()); // обновление размера кисти по параметру newSize
+        brushSize = pixelAmount; // переопределение brushSize
+        drawPaint.setStrokeWidth(brushSize); // задание в параметры кисти нового размера
+    }
+    // геттер и сеттер поля lastBrushSize (они потребуются потом в MainActivity)
+    public float getLastBrushSize() {
+        return lastBrushSize;
+    }
+    public void setLastBrushSize(float lastBrushSize) {
+        this.lastBrushSize = lastBrushSize;
     }
 
     // метод задания цвета

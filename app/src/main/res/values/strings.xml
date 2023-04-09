@@ -5,4 +5,7 @@
     <string name="erase">Стирание</string>
     <string name="save">Сохранить</string>
     <string name="paint">Краска</string>
+    <string name="sml">Малая</string>
+    <string name="med">Средняя</string>
+    <string name="lrg">Большая</string>
 </resources>
